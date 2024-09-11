@@ -9,51 +9,52 @@ import java.util.concurrent.Future;
 
 public class TCPServer {
 
-    public static void main(String argv[]) {
-        ServerSocket welcomeSocket = null;
+    public static void main(String[] args) {
+        ServerSocket servidorSocket = null;
         ExecutorService executor = Executors.newFixedThreadPool(3);
+
         try {
-            welcomeSocket = new ServerSocket(8181);
-            System.out.println("TCP server para o jogo 'Zerinho ou Um' rodando!");
+            servidorSocket = new ServerSocket(8181);
+            System.out.println("Servidor TCP para o jogo 'Zerinho ou Um' rodando!");
 
             while (true) {
                 System.out.println("Aguardando três jogadores...");
 
-                Socket player1Socket = welcomeSocket.accept();
+                Socket jogador1Socket = servidorSocket.accept();
                 System.out.println("Jogador 1 conectado!");
-                Socket player2Socket = welcomeSocket.accept();
+                Socket jogador2Socket = servidorSocket.accept();
                 System.out.println("Jogador 2 conectado!");
-                Socket player3Socket = welcomeSocket.accept();
+                Socket jogador3Socket = servidorSocket.accept();
                 System.out.println("Jogador 3 conectado!");
 
-                sendPlayerInfo(player1Socket, 1);
-                sendPlayerInfo(player2Socket, 2);
-                sendPlayerInfo(player3Socket, 3);
+                enviarInfoJogador(jogador1Socket, 1);
+                enviarInfoJogador(jogador2Socket, 2);
+                enviarInfoJogador(jogador3Socket, 3);
 
-                Future<String> choicePlayer1 = executor.submit(() -> readChoice(player1Socket));
-                Future<String> choicePlayer2 = executor.submit(() -> readChoice(player2Socket));
-                Future<String> choicePlayer3 = executor.submit(() -> readChoice(player3Socket));
+                Future<String> escolhaJogador1 = executor.submit(() -> lerEscolha(jogador1Socket));
+                Future<String> escolhaJogador2 = executor.submit(() -> lerEscolha(jogador2Socket));
+                Future<String> escolhaJogador3 = executor.submit(() -> lerEscolha(jogador3Socket));
 
-                String choice1 = choicePlayer1.get();
-                String choice2 = choicePlayer2.get();
-                String choice3 = choicePlayer3.get();
+                String escolha1 = escolhaJogador1.get();
+                String escolha2 = escolhaJogador2.get();
+                String escolha3 = escolhaJogador3.get();
 
-                int winner = determineWinner(choice1, choice2, choice3);
+                int vencedor = determinarVencedor(escolha1, escolha2, escolha3);
 
-                sendResult(player1Socket, winner == 1);
-                sendResult(player2Socket, winner == 2);
-                sendResult(player3Socket, winner == 3);
+                enviarResultado(jogador1Socket, vencedor == 1);
+                enviarResultado(jogador2Socket, vencedor == 2);
+                enviarResultado(jogador3Socket, vencedor == 3);
 
-                player1Socket.close();
-                player2Socket.close();
-                player3Socket.close();
+                jogador1Socket.close();
+                jogador2Socket.close();
+                jogador3Socket.close();
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (welcomeSocket != null && !welcomeSocket.isClosed()) {
+            if (servidorSocket != null && !servidorSocket.isClosed()) {
                 try {
-                    welcomeSocket.close();
+                    servidorSocket.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -62,71 +63,60 @@ public class TCPServer {
         }
     }
 
-    private static void sendPlayerInfo(Socket playerSocket, int playerNumber) {
+    private static void enviarInfoJogador(Socket jogadorSocket, int numeroJogador) {
         try {
-            DataOutputStream writer = new DataOutputStream(playerSocket.getOutputStream());
-            writer.writeBytes("Voce e o Jogador " + playerNumber + "\n");
+            DataOutputStream escritor = new DataOutputStream(jogadorSocket.getOutputStream());
+            escritor.writeBytes("Você é o Jogador " + numeroJogador + "\n");
+            escritor.writeBytes("Escolha 0 ou 1: \n");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static String readChoice(Socket playerSocket) throws Exception {
-        String choice = "";
-        BufferedReader reader = new BufferedReader(new InputStreamReader(playerSocket.getInputStream()));
-        DataOutputStream writer = new DataOutputStream(playerSocket.getOutputStream());
-
-        while (true) {
-            writer.writeBytes("Escolha 0 ou 1: \n");
-            choice = reader.readLine();
-
-            if (choice != null && (choice.equals("0") || choice.equals("1"))) {
-                break;
-            } else {
-                writer.writeBytes("Escolha invalida. Tente novamente.\n");
-            }
-        }
-
-        return choice;
+    private static String lerEscolha(Socket jogadorSocket) throws Exception {
+        String escolha = "";
+        BufferedReader leitor = new BufferedReader(new InputStreamReader(jogadorSocket.getInputStream()));
+        escolha = leitor.readLine().trim();  // Remove espaços extras
+        return escolha;
     }
 
-    private static void sendResult(Socket playerSocket, boolean isWinner) {
+    private static void enviarResultado(Socket jogadorSocket, boolean vencedor) {
         try {
-            DataOutputStream writer = new DataOutputStream(playerSocket.getOutputStream());
-            if (isWinner) {
-                writer.writeBytes("Voce venceu!\n");
+            DataOutputStream escritor = new DataOutputStream(jogadorSocket.getOutputStream());
+            if (vencedor) {
+                escritor.writeBytes("Você venceu!\n");
             } else {
-                writer.writeBytes("Voce perdeu!\n");
+                escritor.writeBytes("Você perdeu!\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static int determineWinner(String choice1, String choice2, String choice3) {
-        int sum = 0;
+    private static int determinarVencedor(String escolha1, String escolha2, String escolha3) {
+        int soma = 0;
 
         try {
-            sum = Integer.parseInt(choice1) + Integer.parseInt(choice2) + Integer.parseInt(choice3);
+            soma = Integer.parseInt(escolha1) + Integer.parseInt(escolha2) + Integer.parseInt(escolha3);
         } catch (NumberFormatException e) {
             System.out.println("Erro ao converter escolhas para inteiros.");
             return -1;
         }
 
-        if (sum == 0 || sum == 3) {
-            return 0;
-        } else if (sum == 1) {
-            if (choice1.equals("1")) {
+        if (soma == 0 || soma == 3) {
+            return 0; // Empate
+        } else if (soma == 1) {
+            if (escolha1.equals("1")) {
                 return 1;
-            } else if (choice2.equals("1")) {
+            } else if (escolha2.equals("1")) {
                 return 2;
             } else {
                 return 3;
             }
         } else {
-            if (choice1.equals("0")) {
+            if (escolha1.equals("0")) {
                 return 1;
-            } else if (choice2.equals("0")) {
+            } else if (escolha2.equals("0")) {
                 return 2;
             } else {
                 return 3;
@@ -134,3 +124,4 @@ public class TCPServer {
         }
     }
 }
+
