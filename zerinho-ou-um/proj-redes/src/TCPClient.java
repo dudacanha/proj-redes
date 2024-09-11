@@ -5,35 +5,35 @@ import java.net.Socket;
 
 public class TCPClient {
 
-    public static void main(String argv[]) throws Exception {
+    public static void main(String[] args) {
 
-        BufferedReader leitorTeclado = new BufferedReader(new InputStreamReader(System.in));
+        try (Socket socketCliente = new Socket("localhost", 8181);  // Try-with-resources para fechar o socket
+             BufferedReader leitorTeclado = new BufferedReader(new InputStreamReader(System.in));
+             DataOutputStream envioParaServidor = new DataOutputStream(socketCliente.getOutputStream());
+             BufferedReader recebimentoDoServidor = new BufferedReader(new InputStreamReader(socketCliente.getInputStream()))) {
 
-        Socket socketCliente = new Socket("localhost", 8181);
-        System.out.println("Cliente conectado ao servidor!");
+            System.out.println("Cliente conectado ao servidor!");
 
-        DataOutputStream envioParaServidor = new DataOutputStream(socketCliente.getOutputStream());
-        BufferedReader recebimentoDoServidor = new BufferedReader(new InputStreamReader(socketCliente.getInputStream()));
+            String infoJogador = recebimentoDoServidor.readLine();
+            System.out.println(infoJogador);
 
-        String infoJogador = recebimentoDoServidor.readLine();
-        System.out.println(infoJogador);
+            String mensagemServidor = recebimentoDoServidor.readLine();
+            System.out.println(mensagemServidor);
 
-        String mensagemServidor = recebimentoDoServidor.readLine();
-        System.out.println(mensagemServidor);
+            String escolha = leitorTeclado.readLine().trim(); 
 
-        String escolha = leitorTeclado.readLine();
+            while (!escolha.equals("0") && !escolha.equals("1")) {
+                System.out.println("Entrada inválida! Escolha 0 ou 1:");
+                escolha = leitorTeclado.readLine().trim(); 
+            }
 
-        while (!escolha.equals("0") && !escolha.equals("1")) {
-            System.out.println("Entrada inválida! Escolha 0 ou 1:");
-            escolha = leitorTeclado.readLine();
+            envioParaServidor.writeBytes(escolha + '\n');
+
+            String resultado = recebimentoDoServidor.readLine();
+            System.out.println(resultado);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        envioParaServidor.writeBytes(escolha + '\n');
-
-        String resultado = recebimentoDoServidor.readLine();
-        System.out.println(resultado);
-
-        socketCliente.close();
     }
 }
-
