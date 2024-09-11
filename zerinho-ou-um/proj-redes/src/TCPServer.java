@@ -5,7 +5,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class TCPServer {
 
@@ -31,13 +30,9 @@ public class TCPServer {
                 enviarInfoJogador(jogador2Socket, 2);
                 enviarInfoJogador(jogador3Socket, 3);
 
-                Future<String> escolhaJogador1 = executor.submit(() -> lerEscolha(jogador1Socket));
-                Future<String> escolhaJogador2 = executor.submit(() -> lerEscolha(jogador2Socket));
-                Future<String> escolhaJogador3 = executor.submit(() -> lerEscolha(jogador3Socket));
-
-                String escolha1 = escolhaJogador1.get();
-                String escolha2 = escolhaJogador2.get();
-                String escolha3 = escolhaJogador3.get();
+                String escolha1 = lerEscolha(jogador1Socket);
+                String escolha2 = lerEscolha(jogador2Socket);
+                String escolha3 = lerEscolha(jogador3Socket);
 
                 int vencedor = determinarVencedor(escolha1, escolha2, escolha3);
 
@@ -66,7 +61,7 @@ public class TCPServer {
     private static void enviarInfoJogador(Socket jogadorSocket, int numeroJogador) {
         try {
             DataOutputStream escritor = new DataOutputStream(jogadorSocket.getOutputStream());
-            escritor.writeBytes("Você é o Jogador " + numeroJogador + "\n");
+            escritor.writeBytes("Voce e o Jogador " + numeroJogador + "\n");
             escritor.writeBytes("Escolha 0 ou 1: \n");
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,9 +69,8 @@ public class TCPServer {
     }
 
     private static String lerEscolha(Socket jogadorSocket) throws Exception {
-        String escolha = "";
         BufferedReader leitor = new BufferedReader(new InputStreamReader(jogadorSocket.getInputStream()));
-        escolha = leitor.readLine().trim();  // Remove espaços extras
+        String escolha = leitor.readLine().trim();
         return escolha;
     }
 
@@ -84,9 +78,9 @@ public class TCPServer {
         try {
             DataOutputStream escritor = new DataOutputStream(jogadorSocket.getOutputStream());
             if (vencedor) {
-                escritor.writeBytes("Você venceu!\n");
+                escritor.writeBytes("Voce venceu!\n");
             } else {
-                escritor.writeBytes("Você perdeu!\n");
+                escritor.writeBytes("Voce perdeu!\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,7 +98,7 @@ public class TCPServer {
         }
 
         if (soma == 0 || soma == 3) {
-            return 0; // Empate
+            return 0;
         } else if (soma == 1) {
             if (escolha1.equals("1")) {
                 return 1;
@@ -124,4 +118,3 @@ public class TCPServer {
         }
     }
 }
-
