@@ -7,7 +7,7 @@ public class TCPClient {
 
     public static void main(String[] args) {
 
-        try (Socket socketCliente = new Socket("localhost", 8181);  // Try-with-resources para fechar o socket
+        try (Socket socketCliente = new Socket("localhost", 8181);
              BufferedReader leitorTeclado = new BufferedReader(new InputStreamReader(System.in));
              DataOutputStream envioParaServidor = new DataOutputStream(socketCliente.getOutputStream());
              BufferedReader recebimentoDoServidor = new BufferedReader(new InputStreamReader(socketCliente.getInputStream()))) {
@@ -20,11 +20,11 @@ public class TCPClient {
             String mensagemServidor = recebimentoDoServidor.readLine();
             System.out.println(mensagemServidor);
 
-            String escolha = leitorTeclado.readLine().trim(); 
+            String escolha = leitorTeclado.readLine().trim();
 
             while (!escolha.equals("0") && !escolha.equals("1")) {
                 System.out.println("Entrada inválida! Escolha 0 ou 1:");
-                escolha = leitorTeclado.readLine().trim(); 
+                escolha = leitorTeclado.readLine().trim();
             }
 
             envioParaServidor.writeBytes(escolha + '\n');
