@@ -7,34 +7,33 @@ public class TCPClient {
 
     public static void main(String argv[]) throws Exception {
 
-        BufferedReader keyboardReader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader leitorTeclado = new BufferedReader(new InputStreamReader(System.in));
 
-        Socket clientSocket = new Socket("localhost", 8181);
+        Socket socketCliente = new Socket("localhost", 8181);
         System.out.println("Cliente conectado ao servidor!");
 
-        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        DataOutputStream envioParaServidor = new DataOutputStream(socketCliente.getOutputStream());
+        BufferedReader recebimentoDoServidor = new BufferedReader(new InputStreamReader(socketCliente.getInputStream()));
 
-        String playerInfo = inFromServer.readLine();
-        System.out.println(playerInfo);
+        String infoJogador = recebimentoDoServidor.readLine();
+        System.out.println(infoJogador);
 
-        String serverMessage = inFromServer.readLine();
-        System.out.println(serverMessage);
+        String mensagemServidor = recebimentoDoServidor.readLine();
+        System.out.println(mensagemServidor);
 
-        String choice = keyboardReader.readLine();
+        String escolha = leitorTeclado.readLine();
 
-        while (!choice.equals("0") && !choice.equals("1")) {
+        while (!escolha.equals("0") && !escolha.equals("1")) {
             System.out.println("Entrada inválida! Escolha 0 ou 1:");
-            choice = keyboardReader.readLine();
+            escolha = leitorTeclado.readLine();
         }
 
-        outToServer.writeBytes(choice + '\n');
+        envioParaServidor.writeBytes(escolha + '\n');
 
-        String result = inFromServer.readLine();
-        System.out.println(result);
+        String resultado = recebimentoDoServidor.readLine();
+        System.out.println(resultado);
 
-        clientSocket.close();
+        socketCliente.close();
     }
 }
-
 
